@@ -1,0 +1,27 @@
+extends layout
+
+block content
+  div.container.mt-4
+    div.row
+      div#screen.screen.col-12
+
+
+      form.container.mt-2(action="")
+        div.input-group
+          input#input.col-12.form-control.input(type="text" name="chat" autocomplete="off" placeholder="write something")
+          span.input-group-btn
+            button#subBut.btn.btn-default Submit
+
+      div#log.col-12.mt-2.log-screen
+
+  script(src="/socket.io/socket.io.js")
+  script(src="https://code.jquery.com/jquery-3.2.1.min.js",
+    integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=",
+    crossorigin="anonymous")
+  script(src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js",
+    integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh",
+    crossorigin="anonymous")
+  script(src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js",
+    integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ",
+    crossorigin="anonymous")
+  script(src="javascripts/main.js")
