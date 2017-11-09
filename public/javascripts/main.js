@@ -31,7 +31,7 @@ $(document).ready(function() {
     logScreen.prepend($('<p class="text-danger">').text(time + ': User disconnected'));
   });
 
-  //while submiting form
+  //while submitting form
   $('form').submit( () => {
 
     let newInput = input.val();
