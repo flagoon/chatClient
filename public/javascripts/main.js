@@ -13,6 +13,10 @@ $(document).ready(function() {
     return time.replace(timeRegEx, '');
   }
 
+  socket.on('wrongNick', (nick) => {
+    logScreen.prepend($('<div class="bg-warning text-danger p-1 my-1">').html('This nick is already taken.'));
+  });
+
   //response from server, what to do when server is broadcasting that someone connected
   socket.on('connected', () => {
 
@@ -21,14 +25,14 @@ $(document).ready(function() {
 
     logScreen.removeClass('hide-log');
     logScreen.addClass('log-screen');
-    logScreen.prepend($('<p class="text-success">').text(time + ': User connected'));
+    logScreen.prepend($('<div class="text-success p-1 my-1">').text(time + ': User connected'));
 
   });
 
   //show information, that someone logout
   socket.on('disconnect', () => {
     let time = getTime();
-    logScreen.prepend($('<p class="text-danger">').text(time + ': User disconnected'));
+    logScreen.prepend($('<div class="text-danger p-1 my-1">').text(time + ': User disconnected'));
   });
 
   //while submitting form
@@ -43,8 +47,8 @@ $(document).ready(function() {
 
     //Help instructions. No need to send to server. Just show them to the user
     if (newInput === '/help') {
-      logScreen.prepend($('<p class="text-primary">').text('Write: /setTime value_in_seconds to change period for keeping chat history'));
-      logScreen.prepend($('<p class="text-primary">').text('Write: /nick new_nick to change nickname. Name should be 3-15 signs and only letters'));
+      logScreen.prepend($('<div class="text-primary p-1 my-1">').text('Write: /setTime value_in_seconds to change period for keeping chat history'));
+      logScreen.prepend($('<div class="text-primary p-1 my-1">').text('Write: /nick #new_nick to change nickname. Name should be 3-15 signs and only letters'));
 
       input.val('');
 
@@ -54,10 +58,14 @@ $(document).ready(function() {
     //function to set nickname and join
     if (newInput.indexOf('/nick ') === 0) {
       //should be /nick #newNick, where new nick is word, only letters, from 3-15. regEx is looking
-      let nameRegEx = / [a-z]{3,15}/i;
+
+      let nameRegEx = /#([a-z](\w+))/i;
       let newLogin = newInput.match(nameRegEx);
-      newLogin = newLogin[0].replace(' ','');
-      socket.emit('changeNick', newLogin);
+      if (newLogin !== null) {
+        socket.emit('changeNick', newLogin[0].replace('#',''));
+      } else {
+        logScreen.prepend($('<div class="text-white bg-danger p-1 my-1">').text('There was not viable nick. You should use /nick #nick_name. Nickname should start with letter and contains only letters, numbers and underscore'));
+      }
       input.val('');
       return false;
 
@@ -65,7 +73,7 @@ $(document).ready(function() {
       //regex to find first numeric value
       let timeRegEx = /[0-9]+/i;
 
-      //timeVal will be send to server. It's a number.
+      //timeVal will be send to server. It's a number. If no correct value is give, 0 will be sent.
       let timeVal = Number(newInput.match(timeRegEx));
       socket.emit('changeTime', timeVal);
       input.val('');
@@ -74,7 +82,7 @@ $(document).ready(function() {
       //this part is for errors
     } else if (newInput.indexOf('/') === 0) {
       input.val('');
-      logScreen.prepend($('<p class="text-white bg-danger">').html('Command not found, try <strong>/help</strong> for commands'));
+      logScreen.prepend($('<div class="text-white bg-danger p-1 my-1">').html('Command not found, try <strong>/help</strong> for commands'));
       return false;
     }
 
@@ -97,12 +105,12 @@ $(document).ready(function() {
   });
 
   socket.on('changedNick', (data) => {
-    logScreen.prepend($('<p class="text-default">').html('User <span class="text-danger">' + data.oldNick + '</span> changed nickname to <span class="text-danger">' + data.newNick + '</span>'));
+    logScreen.prepend($('<div class="text-default p-1 my-1">').html('User <span class="text-danger">' + data.oldNick + '</span> changed nickname to <span class="text-danger">' + data.newNick + '</span>'));
   });
 
   //receive text from server
   socket.on('sendResponse', (response) => {
-    screen.append($('<p class="text-primary bg-warning">').html(response));
+    screen.append($('<div class="text-primary bg-warning p-1">').html(response));
     screen.scrollTop(screen[0].scrollHeight);
   });
 
@@ -111,7 +119,7 @@ $(document).ready(function() {
       return false;
     }
     for (let i = 0; i < data.length; i++) {
-      screen.append($('<p class="text-muted">').html(data[i]));
+      screen.append($('<div class="text-muted p-1">').html(data[i]));
     }
     screen.append($('<hr/>'));
   })

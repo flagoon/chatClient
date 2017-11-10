@@ -79,7 +79,7 @@ io.on('connection', (socket) => {
 
   socket.on('changeNick', (nick) => {
 
-    client.hexistsAsync('users', nick).then((val) => {
+    checkIfExists(nick).then((val) => {
       if (val === 0) {
         socket.broadcast.emit('changedNick', {'oldNick': socket.nickname, 'newNick': nick});
         socket.nickname = nick;
@@ -87,7 +87,9 @@ io.on('connection', (socket) => {
         client.hset('users', socket.nickname, '');
 
         io.emit('usernames');
-      } else console.log('Nick already taken');
+      } else {
+        socket.emit('wrongNick', nick);
+      }
     });
   });
 
@@ -101,9 +103,16 @@ io.on('connection', (socket) => {
       }
       else console.log('error')
     });
-  })
-
+  });
 });
+
+function checkIfExists(nick) {
+  return new Promise((resolve, reject) => {
+    client.hexistsAsync('users', nick).then((val) => {
+      resolve(val);
+    });
+  });
+}
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -122,9 +131,5 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
-
-function changeTimeLimit(val) {
-  timeLimit =  val * 1000;
-}
 
 module.exports = app;
