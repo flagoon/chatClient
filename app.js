@@ -19,9 +19,6 @@ const io = require('socket.io').listen(server);
 
 const index = require('./routes/index');
 
-//for the future
-let nicknames = [];
-
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -60,12 +57,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  //
-
-  if (socket.nickname === undefined) {
-    socket.nickname = 'Guest';
-  }
-
   //when new user is connected, other clients receive information
   socket.broadcast.emit('connected');
 
@@ -87,12 +78,17 @@ io.on('connection', (socket) => {
   });
 
   socket.on('changeNick', (nick) => {
-    socket.broadcast.emit('changedNick', {'oldNick': socket.nickname, 'newNick': nick});
-    socket.nickname = nick;
-    nicknames.push(socket.nickname);
 
-    //for the future
-    io.emit('usernames');
+    client.hexistsAsync('users', nick).then((val) => {
+      if (val === 0) {
+        socket.broadcast.emit('changedNick', {'oldNick': socket.nickname, 'newNick': nick});
+        socket.nickname = nick;
+
+        client.hset('users', socket.nickname, '');
+
+        io.emit('usernames');
+      } else console.log('Nick already taken');
+    });
   });
 
 
