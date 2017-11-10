@@ -22,8 +22,6 @@ const index = require('./routes/index');
 //for the future
 let nicknames = [];
 
-let timeLimit = 300000;
-
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -47,14 +45,20 @@ io.on('connection', (socket) => {
     console.log(err);
   });
 
-  let limit = Date.now() - timeLimit;
+  //get time value from database and remove all data that was stored before this time.
+  client.getAsync('time').then((data) => {
+    let limit = Date.now() - data * 1000;
+    client.zremrangebyscore('chat', '-inf', '(' + limit);
+  });
 
-  //delete old messages
-  client.zremrangebyscoreAsync('chat', '-inf', '(' + limit).then(
-      client.zrange('chat', '0', '-1', (err, data) => {
-        if (err) console.log('Error: ' + err);
-        socket.emit('sendHistory', data);
-      }));
+  //get data from redis, then send this data to client
+  client.zrangeAsync('chat', '0', '-1').then((data) => {
+    if (data.length > 0) {
+      socket.emit('sendHistory', data)
+    } else {
+      console.log('No data to show');
+    }
+  });
 
   //
 
@@ -75,8 +79,6 @@ io.on('connection', (socket) => {
 
     let timeStamp = Date.now();
     client.zaddAsync('chat', timeStamp, msg).then(socket.broadcast.emit('sendResponse', msg));
-
-    //when received text, send response to clients. We are sending from server to clients content and login.
   });
 
 
@@ -88,12 +90,21 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('changedNick', {'oldNick': socket.nickname, 'newNick': nick});
     socket.nickname = nick;
     nicknames.push(socket.nickname);
+
     //for the future
     io.emit('usernames');
   });
 
+
+  //this code is saving setTime variable in database, so it's not resetting after each server shut down.
   socket.on('changeTime', (sentValue) => {
-    changeTimeLimit(sentValue);
+    client.getAsync('time').then((value) => {
+      if (value) {
+        client.set('time', sentValue);
+        console.log('Time value was change to ' + sentValue + 's');
+      }
+      else console.log('error')
+    });
   })
 
 });
