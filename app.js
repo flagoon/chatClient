@@ -38,6 +38,10 @@ app.use('/', index);
 
 io.on('connection', (socket) => {
 
+  getUsers().then((val) => {
+    io.emit('usernames', val);
+  });
+
   client.on('error', (err) => {
     console.log(err);
   });
@@ -74,7 +78,26 @@ io.on('connection', (socket) => {
 
 
   socket.on('disconnect', () => {
-    io.emit('disconnect');
+    client.hdel('users', socket.nickname);
+
+    getUsers().then((val) => {
+      console.log(socket.nickname + ' disconected');
+      io.emit('usernames', val);
+      io.emit('disconnect', socket.nickname);
+    });
+  });
+
+  socket.on('newLogin', (data) => {
+    checkIfExists(data).then((val) => {
+      if (val === 0) {
+        console.log('data: ' + data);
+        client.hset('users', data, '');
+        socket.nickname = data;
+        getUsers().then((val) => {
+          io.emit('usernames', val);
+        });
+      }
+    });
   });
 
   socket.on('changeNick', (nick) => {
@@ -86,7 +109,10 @@ io.on('connection', (socket) => {
 
         client.hset('users', socket.nickname, '');
 
-        io.emit('usernames');
+        getUsers().then((val) => {
+          io.emit('usernames', val);
+        });
+
       } else {
         socket.emit('wrongNick', nick);
       }
@@ -109,6 +135,14 @@ io.on('connection', (socket) => {
 function checkIfExists(nick) {
   return new Promise((resolve, reject) => {
     client.hexistsAsync('users', nick).then((val) => {
+      resolve(val);
+    });
+  });
+}
+
+function getUsers() {
+  return new Promise((resolve, reject) => {
+    client.hgetallAsync('users').then((val) => {
       resolve(val);
     });
   });

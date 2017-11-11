@@ -82,4 +82,11 @@ table {
 .hide-log {
   display: none; }
 
+.users {
+  font-size: 0.8rem;
+  font-family: monospace; }
+  .users li {
+    padding: 0.2rem;
+    color: olivedrab; }
+
 /*# sourceMappingURL=style.css.map */

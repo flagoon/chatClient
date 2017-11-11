@@ -3,16 +3,27 @@ extends layout
 block content
   div.container.mt-4
     div.row
-      div#screen.screen.col-12
+      div.col-9
+        form#login-form.col-10(action='')
+          div.input-group
+            input#login-input.login-input.col-12(placeholder="Choose your nick")
+            span.input-group-btn
+              button.btn.btn-default Login
+        div#screen.screen.col-12.invisible
 
 
-      form.container.mt-2(action="")
-        div.input-group
-          input#input.col-12.form-control.input(type="text" name="chat" autocomplete="off" placeholder="write something")
-          span.input-group-btn
-            button#subBut.btn.btn-default Submit
+        form#input-form.container-fluid.mt-2.invisible(action="")
+          div.input-group
+            input#input.col-12.form-control.input(type="text" name="chat" autocomplete="off" placeholder="write something")
+            span.input-group-btn
+              button#subBut.btn.btn-default Submit
 
-      div#log.col-12.mt-2.log-screen
+        div#log.col-12.mt-2.log-screen.invisible
+      div.col-3.row
+        div.col-12
+          ul#userBlock.users
+
+
 
   script(src="/socket.io/socket.io.js")
   script(src="https://code.jquery.com/jquery-3.2.1.min.js",

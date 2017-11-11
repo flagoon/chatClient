@@ -3,6 +3,8 @@ $(document).ready(function() {
   const input = $('#input');
   const screen = $('#screen');
   const logScreen = $('#log');
+  const userBlock = $('#userBlock');
+  const loginInput = $('#login-input');
   const socket = io();
 
   function getTime() {
@@ -13,13 +15,32 @@ $(document).ready(function() {
     return time.replace(timeRegEx, '');
   }
 
+  //serwer is sending JSON object with all users in database, this function show them on the list
+  function showAllUsers (users) {
+    for (let user in users) {
+      userBlock.append($('<li>').html(user));
+    }
+  }
+
+  $('#login-form').submit((e) => {
+    e.preventDefault();
+    let loginVal = loginInput.val();
+    console.log(loginVal);
+    $('#login-input').val('');
+    socket.emit('newLogin', loginVal);
+  });
+
+  socket.on('usernames', (users)=> {
+    userBlock.empty();
+    showAllUsers(users);
+  });
+
   socket.on('wrongNick', (nick) => {
-    logScreen.prepend($('<div class="bg-warning text-danger p-1 my-1">').html('This nick is already taken.'));
+    logScreen.prepend($('<div class="bg-warning text-danger p-1 my-1">').html(nick + ' is already taken.'));
   });
 
   //response from server, what to do when server is broadcasting that someone connected
   socket.on('connected', () => {
-
 
     let time = getTime();
 
@@ -30,13 +51,13 @@ $(document).ready(function() {
   });
 
   //show information, that someone logout
-  socket.on('disconnect', () => {
+  socket.on('disconnect', (nickname) => {
     let time = getTime();
-    logScreen.prepend($('<div class="text-danger p-1 my-1">').text(time + ': User disconnected'));
+    logScreen.prepend($('<div class="text-danger p-1 my-1">').text(time + ' - ' + nickname + ' disconnected'));
   });
 
   //while submitting form
-  $('form').submit( () => {
+  $('#input-form').submit( () => {
 
     let newInput = input.val();
 
