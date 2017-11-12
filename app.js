@@ -90,12 +90,14 @@ io.on('connection', (socket) => {
   socket.on('newLogin', (data) => {
     checkIfExists(data).then((val) => {
       if (val === 0) {
-        console.log('data: ' + data);
         client.hset('users', data, '');
         socket.nickname = data;
         getUsers().then((val) => {
           io.emit('usernames', val);
         });
+        socket.emit('showYourself');
+      } else {
+        socket.emit('loginExists');
       }
     });
   });

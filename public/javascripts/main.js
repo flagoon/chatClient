@@ -22,6 +22,17 @@ $(document).ready(function() {
     }
   }
 
+  socket.on('showYourself', () => {
+    $('#login-form').addClass('invisible');
+    screen.removeClass('invisible');
+    logScreen.removeClass('invisible');
+    $('#input-form').removeClass('invisible');
+  });
+
+  socket.on('loginExists', () => {
+    loginInput.attr('placeholder', 'This nick already exists');
+  });
+
   $('#login-form').submit((e) => {
     e.preventDefault();
     let loginVal = loginInput.val();
