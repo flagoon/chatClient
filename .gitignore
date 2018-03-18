@@ -2,3 +2,4 @@ node_modules/
 .idea/workspace.xml
 .idea/inspectionProfiles/
 public/images/
+public/javascripts/main_back.js

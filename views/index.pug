@@ -6,7 +6,7 @@ block content
       div.col-9
         form#login-form.col-10(action='')
           div.input-group
-            input#login-input.login-input.col-12(placeholder="Choose your nick")
+            input#login-input.login-input.col-12(placeholder="Choose your nick" autocomplete="off")
             span.input-group-btn
               button.btn.btn-default Login
         div#screen.screen.col-12.invisible
@@ -19,6 +19,8 @@ block content
               button#subBut.btn.btn-default Submit
 
         div#log.col-12.mt-2.log-screen.invisible
+          div.text-primary.p-1.my-1 Write: /setTime value_in_seconds to change period for keeping chat history
+          div.text-primary.p-1.my-1 Write: /nick #new_nick to change nickname. Name should be 3-15 signs and only letters
       div.col-3.row
         div.col-12
           ul#userBlock.users

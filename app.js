@@ -38,6 +38,7 @@ app.use('/', index);
 
 io.on('connection', (socket) => {
 
+  //after connecting to login, it shows up the list of users
   getUsers().then((val) => {
     io.emit('usernames', val);
   });
@@ -45,24 +46,6 @@ io.on('connection', (socket) => {
   client.on('error', (err) => {
     console.log(err);
   });
-
-  //get time value from database and remove all data that was stored before this time.
-  client.getAsync('time').then((data) => {
-    let limit = Date.now() - data * 1000;
-    client.zremrangebyscore('chat', '-inf', '(' + limit);
-  });
-
-  //get data from redis, then send this data to client
-  client.zrangeAsync('chat', '0', '-1').then((data) => {
-    if (data.length > 0) {
-      socket.emit('sendHistory', data)
-    } else {
-      console.log('No data to show');
-    }
-  });
-
-  //when new user is connected, other clients receive information
-  socket.broadcast.emit('connected');
 
   //this function listen to what IO is sending from client side. We receive 2 things from client side (an object).
   //newInput, which is a message content, and login, which is a name of person who sent it.
@@ -78,26 +61,51 @@ io.on('connection', (socket) => {
 
 
   socket.on('disconnect', () => {
-    client.hdel('users', socket.nickname);
 
-    getUsers().then((val) => {
-      console.log(socket.nickname + ' disconected');
-      io.emit('usernames', val);
-      io.emit('disconnect', socket.nickname);
-    });
+    //is there is no socket.nickname, that means user is still in login screen. If he DC from here, he
+    //will not be logged to other clients. Otherwise he will be deleted from users and new array will be sent to client.
+    if (socket.nickname !== undefined) {
+      client.hdel('users', socket.nickname);
+
+      getUsers().then((val) => {
+        io.emit('usernames', val);
+        io.emit('disconnect', socket.nickname);
+      });
+
+    } else {
+      console.log('Unidentified user DC');
+    }
   });
 
-  socket.on('newLogin', (data) => {
+  //what to do after user logged. data is value he send (nick), callback will call back to the socket that emits it
+  socket.on('newLogin', (data, callback) => {
     checkIfExists(data).then((val) => {
+
+      //if nickname is not present
       if (val === 0) {
         client.hset('users', data, '');
         socket.nickname = data;
-        getUsers().then((val) => {
-          io.emit('usernames', val);
+
+        //when new user is connected, other clients receive information
+        socket.broadcast.emit('connected', socket.nickname);
+
+        //get time value from database and remove all data that was stored before this time.
+        client.getAsync('time').then((dateVal) => {
+          let limit = Date.now() - dateVal * 1000;
+          client.zremrangebyscore('chat', '-inf', '(' + limit);
         });
-        socket.emit('showYourself');
+
+        //get data from redis, then send this data to client
+        client.zrangeAsync('chat', '0', '-1').then((chatHistory) => {
+          getUsers().then((val) => {
+            io.emit('usernames', val);
+          });
+
+          //if login is correct, client receive instruction to show chat and send chatHistory
+          callback({action: 'showAll', history: chatHistory});
+        });
       } else {
-        socket.emit('loginExists');
+        callback({action: 'none'});
       }
     });
   });

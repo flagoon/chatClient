@@ -89,4 +89,7 @@ table {
     padding: 0.2rem;
     color: olivedrab; }
 
+.login-error::placeholder {
+  color: red; }
+
 /*# sourceMappingURL=style.css.map */
